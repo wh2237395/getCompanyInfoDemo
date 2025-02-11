@@ -10,18 +10,22 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jsoup.Jsoup;
 
 import javax.swing.text.Document;
 import javax.swing.text.Element;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
 
 public class Main {
     private static final String DETAIL_PAGE_BASE_URL = "https://www.qcc.com/firm/";
     private static final long REQUEST_DELAY = 10000; // 10 秒的延迟，单位为毫秒
+    private static String filePath = "C:\\Users\\WH\\Desktop\\商协会123.xlsx";
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -79,7 +83,7 @@ public class Main {
         httpGet.setHeader("content-type", "application/json");
         // cookie 需要修改
         httpGet.setHeader("Cookie", "\n" +
-                "qcc_did=2cfbe220-89f8-4f19-b830-8703a5e0755b; UM_distinctid=194ee44031f886-0d6aa827cc2ef5-26011b51-144000-194ee4403201443; acw_tc=0a472f8417391735466311576e0041b548c0ccc0d1aee5bac07f66d422f16f; QCCSESSID=44ec5f0af542caae399b643645; tfstk=gyzKZxvZrOXneE0c-wsiZJKDHTfgFzFFtJPXrYDHVReTGSJnVDXEele7QDDB-6oRwRw4t048aUh7N85EE6SgTWurPtX0eZVUTi6jecUpRNt__j9BFGmI_HEI0tXcoN0HMFU1nJqs5j7taAGINDg56cGqM4OBR8MsfjGDd4g7F13sZbOBO0iIfcGmCYgSP8N16blkVBHkOYL8DTJ61t_M7UYuWXnKeUc6yY4BockbOALWyPhdPxNIBUT-KgszG5FhpEPi8rexiJb6J-F7guiTyd6xUPF_RuNwp1gY6lqmvlBByA4nQmzIkQ_Q62HKczeNz6yb67ZmXPffu23Idu0UZIB36ye3TPFkNhgK-lnYJq_2dYqgMzh8zT7TH7N4VcUJpg5zorHWRKDxZH1O63-rAfzN40OvlbZmJfHcshxy4ccZ6xfO63-rAfltn1xM43oi_; CNZZDATA1254842228=1249216502-1739164222-https%253A%252F%252Fwww.baidu.com%252F%7C1739173865");
+                "qcc_did=2cfbe220-89f8-4f19-b830-8703a5e0755b; UM_distinctid=194ee44031f886-0d6aa827cc2ef5-26011b51-144000-194ee4403201443; QCCSESSID=44ec5f0af542caae399b643645; acw_tc=1a0c380c17392379518828272e0136d31b5f6fef331f2452fa4c3d3ed4cbac; tfstk=gwFSsF1mY3x7rot0rgQqfA5s44cQAk1ZAegLSydyJbhJvHUt04PPqynQAoo0AvboYDnQYyePu15arzcn9XsN_1Jc_EbgNDKE9bcvWlPN815arzHF2Ach_7W1C7nSvXH-pjUxmVLJ9kdKHZgK83ppwkUAlm0H2LH-JEhx82gK9XELkZgnDDh7JigcF0U5P2Wu3X10xznX9BFRtYisPpRp9SgSFcU-cYM7G4MSXxfTaYP80yFzZxXvhX44CkwLXiJr2Rg_cAy5fQZ_q2UIJu1M5mF7RSMu3FR_lvi7H7HXJBUTr8kYdusWE0ezcA0xHe1iuloYr7ef-nU8b0G-kx5O5rHL37DgaidS6R4raJEO0Lo8C2IzLCo_8O9BlAAIlc7flpv34_WptSWCATM-oqPNlZtWKY3mlc7flpvneq04_Z_XVpf..; CNZZDATA1254842228=1249216502-1739164222-https%253A%252F%252Fwww.baidu.com%252F%7C1739237977");
 
         try {
 
@@ -92,8 +96,9 @@ public class Main {
                     String responseBody = EntityUtils.toString(entity);
                     System.out.println("详情页响应内容长度: " + responseBody.length());
                     // 这里可以对详情页内容进行进一步处理
-                    // 提取并拼接信息
-                    extractAndPrintInfo(responseBody);
+                    // 提取并写入xslx
+                    Map<String, String> infoMap = extractInfo(responseBody);
+                    writeInfoToExcel(infoMap, filePath);
                 }
             } else {
                 System.err.println("详情页请求失败，状态码: " + statusCode);
@@ -103,40 +108,6 @@ public class Main {
         }
     }
 
-    private static void extractAndPrintInfo(String responseBody) {
-        String title = extractInfoBetween(responseBody, "<title>", "</title>");
-        if (title != null) {
-            title = "title" + title ;
-        } else {
-            title = "\"title\":\"\"";
-        }
-        String operName = extractInfoBetween(responseBody, "\"operName\":\"", "\"");
-        if (operName != null) {
-            operName = "\"operName\":\"" + operName + "\"";
-        } else {
-            operName = "\"operName\":\"\"";
-        }
-        String contactNo = extractInfoBetween(responseBody, "\"contactNo\":\"", "\"");
-        if (contactNo != null) {
-            contactNo = "\"contactNo\":\"" + contactNo + "\"";
-        } else {
-            contactNo = "\"contactNo\":\"\"";
-        }
-        String address = extractInfoBetween(responseBody, "\"address\":\"", "\"");
-        String creditCode = extractInfoBetween(responseBody, "\"creditCode\":\"", "\"");
-        String djInfo = "{\"DJInfo\":{";
-        if (address != null) {
-            djInfo += "\"address\":\"" + address + "\"";
-            if (creditCode != null) {
-                djInfo += ",\"creditCode\":\"" + creditCode + "\"";
-            }
-        } else if (creditCode != null) {
-            djInfo += "\"creditCode\":\"" + creditCode + "\"";
-        }
-        djInfo += "}}";
-        String result = title + "," + operName + "," + contactNo + "," + djInfo;
-        System.out.println(result);
-    }
     private static String extractInfoBetween(String source, String start, String end) {
         int startIndex = source.indexOf(start);
         if (startIndex != -1) {
@@ -147,6 +118,107 @@ public class Main {
             }
         }
         return null;
+    }
+
+    // 提取并处理信息
+    private static Map<String, String> extractInfo(String responseBody) {
+        Map<String, String> infoMap = new HashMap<>();
+        infoMap.put("协会名称", extractInfoBetween(responseBody, "<title>", "</title>"));
+        infoMap.put("法定代表人", extractInfoBetween(responseBody, "\"operName\":\"", "\""));
+        infoMap.put("联系电话", extractInfoBetween(responseBody, "\"contactNo\":\"", "\""));
+        infoMap.put("地址", extractInfoBetween(responseBody, "\"address\":\"", "\""));
+        infoMap.put("统一社会信用代码", extractInfoBetween(responseBody, "\"creditCode\":\"", "\""));
+        return infoMap;
+    }
+
+
+    // 将信息写入 Excel 文件
+    private static void writeInfoToExcel(Map<String, String> infoMap, String filePath) {
+        Workbook workbook = null;
+        Sheet sheet = null;
+        try (FileInputStream fis = new FileInputStream(new File(filePath))) {
+            workbook = new XSSFWorkbook(fis);
+            sheet = workbook.getSheetAt(0);
+        } catch (FileNotFoundException e) {
+            // 文件不存在，创建新的工作簿和工作表
+            workbook = new XSSFWorkbook();
+            sheet = workbook.createSheet("协会信息");
+            // 创建表头
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"协会名称", "法定代表人", "联系电话", "地址", "统一社会信用代码"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // 查找是否存在相同的协会名称记录
+        boolean found = false;
+        int lastRowNum = sheet.getLastRowNum();
+        for (int i = 1; i <= lastRowNum; i++) {
+            Row row = sheet.getRow(i);
+            Cell nameCell = row.getCell(0);
+            if (nameCell != null && infoMap.get("协会名称").equals(nameCell.getStringCellValue())) {
+                // 存在相同的协会名称，更新记录
+                found = true;
+                for (int j = 1; j < 5; j++) {
+                    Cell cell = row.getCell(j);
+                    if (cell == null) {
+                        cell = row.createCell(j);
+                    }
+                    String key = getKeyByIndex(j);
+                    String value = infoMap.get(key);
+                    if (value != null) {
+                        cell.setCellValue(value);
+                    }
+                }
+                break;
+            }
+        }
+        if (!found) {
+            // 不存在相同的协会名称，新增记录
+            Row newRow = sheet.createRow(lastRowNum + 1);
+            for (int i = 0; i < 5; i++) {
+                Cell cell = newRow.createCell(i);
+                String key = getKeyByIndex(i);
+                String value = infoMap.get(key);
+                if (value != null) {
+                    cell.setCellValue(value);
+                }
+            }
+        }
+        // 保存文件
+        try (FileOutputStream fos = new FileOutputStream(new File(filePath))) {
+            workbook.write(fos);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (workbook != null) {
+                    workbook.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    // 根据列索引获取对应的键
+    private static String getKeyByIndex(int index) {
+        switch (index) {
+            case 0:
+                return "协会名称";
+            case 1:
+                return "法定代表人";
+            case 2:
+                return "联系电话";
+            case 3:
+                return "地址";
+            case 4:
+                return "统一社会信用代码";
+            default:
+                return null;
+        }
     }
 
 }
