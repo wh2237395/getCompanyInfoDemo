@@ -98,6 +98,11 @@ public class Main {
                     // 这里可以对详情页内容进行进一步处理
                     // 提取并写入xslx
                     Map<String, String> infoMap = extractInfo(responseBody);
+                    // 打印 map 中的内容
+                    System.out.println("提取的信息如下：");
+                    for (Map.Entry<String, String> entry : infoMap.entrySet()) {
+                        System.out.println(entry.getKey() + ": " + entry.getValue());
+                    }
                     writeInfoToExcel(infoMap, filePath);
                 }
             } else {
@@ -123,7 +128,7 @@ public class Main {
     // 提取并处理信息
     private static Map<String, String> extractInfo(String responseBody) {
         Map<String, String> infoMap = new HashMap<>();
-        infoMap.put("协会名称", extractInfoBetween(responseBody, "<title>", "</title>"));
+        infoMap.put("协会名称", extractInfoBetween(responseBody, "<title>", " - 企查查"));
         infoMap.put("法定代表人", extractInfoBetween(responseBody, "\"operName\":\"", "\""));
         infoMap.put("联系电话", extractInfoBetween(responseBody, "\"contactNo\":\"", "\""));
         infoMap.put("地址", extractInfoBetween(responseBody, "\"address\":\"", "\""));
