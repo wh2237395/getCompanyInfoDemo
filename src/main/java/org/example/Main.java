@@ -24,8 +24,10 @@ import java.util.*;
 
 public class Main {
     private static final String DETAIL_PAGE_BASE_URL = "https://www.qcc.com/firm/";
-    private static final long REQUEST_DELAY = 10000; // 10 秒的延迟，单位为毫秒
-    private static String filePath = "C:\\Users\\WH\\Desktop\\商协会123.xlsx";
+    private static final long MIN_DELAY = 5000; // 5 秒的延迟，单位为毫秒
+    private static final long MAX_DELAY = 10000; // 10 秒的延迟，单位为毫秒
+    private static String filePath = "C:\\Users\\19701\\Desktop\\商协会123.xlsx";
+    private static Random random = new Random();
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -40,8 +42,10 @@ public class Main {
             // 发送请求获取详情页内容
             sendRequestToDetailPage(detailPageUrl);
             try {
-                // 添加 10 秒的延迟
-                Thread.sleep(REQUEST_DELAY);
+                // 生成 5 到 10 秒之间的随机延迟
+                long delay = MIN_DELAY + random.nextInt((int) (MAX_DELAY - MIN_DELAY + 1));
+                System.out.println("本次请求延迟: " + delay + " 毫秒");
+                Thread.sleep(delay);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -79,11 +83,11 @@ public class Main {
         HttpClient httpClient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet(url);
         // 设置请求头，可根据实际情况调整
-        httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36");
+        httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0");
         httpGet.setHeader("content-type", "application/json");
         // cookie 需要修改
         httpGet.setHeader("Cookie", "\n" +
-                "qcc_did=2cfbe220-89f8-4f19-b830-8703a5e0755b; UM_distinctid=194ee44031f886-0d6aa827cc2ef5-26011b51-144000-194ee4403201443; QCCSESSID=44ec5f0af542caae399b643645; acw_tc=1a0c380c17392379518828272e0136d31b5f6fef331f2452fa4c3d3ed4cbac; tfstk=gwFSsF1mY3x7rot0rgQqfA5s44cQAk1ZAegLSydyJbhJvHUt04PPqynQAoo0AvboYDnQYyePu15arzcn9XsN_1Jc_EbgNDKE9bcvWlPN815arzHF2Ach_7W1C7nSvXH-pjUxmVLJ9kdKHZgK83ppwkUAlm0H2LH-JEhx82gK9XELkZgnDDh7JigcF0U5P2Wu3X10xznX9BFRtYisPpRp9SgSFcU-cYM7G4MSXxfTaYP80yFzZxXvhX44CkwLXiJr2Rg_cAy5fQZ_q2UIJu1M5mF7RSMu3FR_lvi7H7HXJBUTr8kYdusWE0ezcA0xHe1iuloYr7ef-nU8b0G-kx5O5rHL37DgaidS6R4raJEO0Lo8C2IzLCo_8O9BlAAIlc7flpv34_WptSWCATM-oqPNlZtWKY3mlc7flpvneq04_Z_XVpf..; CNZZDATA1254842228=1249216502-1739164222-https%253A%252F%252Fwww.baidu.com%252F%7C1739237977");
+                "qcc_did=9ad02ed0-3f3d-4b3a-8d71-b0d7d82de8df; UM_distinctid=194ee44e14612d7-04ff3ea3f6a829-4c657b58-144000-194ee44e1471bba; acw_tc=1a0c39d717393214830054739e00421f40c0a5ae543fb9d08be58714f3f2b9; QCCSESSID=0e509cae40b9b2d6135359cb14; tfstk=gfVoTBYlt8k5X0r92ol5CFMqOQ6Y2UGIQkdKvXnF3moX23d88Xo3YmF-2zhyP-ZT7QFRFXdnNXGFXGCO6aaSOXyJxc_eVnuEW6dyUDlSgFrT6wCO6zarpgksO1FRj4ot2DlEUvlqumgw4LrEUjlqc2ge42RPoroj04JrU0R2043IzQrETZ4qc2lEYj71U0NUgSSDD_0ay4dLg4DobzouyuN2XYJ7omA61SDnEcRnmBRUi44bBvQ9s9naC0Htxo5vZX4q-oDTEGAuxyz_LxVH4aEa0JqEl-sHKc2UyRwEna5zobmon4DWzpcuLuNnF8YC5rlzcRisUtsjo7FtKcMD0gzYo0kgKuIXT0eguoDTMndt_RZ0tAlN43J2Qq4XOq7Lgp9IUqgmX3geGaf31zdloZvNRYujPcQcop9IUqgmXZbDQ6Mrl4iO.; CNZZDATA1254842228=1561662682-1739164279-https%253A%252F%252Fwww.baidu.com%252F%7C1739322159");
 
         try {
 
